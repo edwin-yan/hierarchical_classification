@@ -1,7 +1,7 @@
 from tensorflow import keras
 from tensorflow.keras.utils import to_categorical
-import numpy as np
 import matplotlib.pyplot as plt
+from common import *
 
 
 def get_cifar10():
@@ -14,7 +14,7 @@ def get_cifar10():
     X, Y_sub = np.concatenate((x_train, x_test), axis=0) / 255, np.concatenate((y_train, y_test), axis=0)
     Y_super = v_create_superclass(Y_sub)
 
-    return (X, to_categorical(Y_super), to_categorical(Y_sub))
+    return X, to_categorical(Y_super), to_categorical(Y_sub)
 
 
 def get_labels(idx, level='super'):
@@ -45,35 +45,14 @@ def plot_sample_images(inputs, v_label_func, top_n=20, n_col=10):
     plt.show()
 
 
-def gen_hierarchy(super_label, sub_label, use_argmax=False):
-    combined_labels = np.stack((np.argmax(super_label, axis=1), np.argmax(sub_label, axis=1)), axis=1)
-    unique_combinations = np.unique(combined_labels, axis=0)
-    hierarchy = {}
-    for combination in unique_combinations:
-        super_class, sub_class = combination
-        if super_class in hierarchy.keys():
-            hierarchy[super_class].append(sub_class)
-        else:
-            hierarchy[super_class] = [sub_class]
-    return hierarchy
 
-
-def calculate_hiearchy_mismatch(super_labels, sub_labels, hierarchy):
-    mismatch = 0
-    assert len(super_labels) == len(sub_labels)
-    for idx, super_label in enumerate(super_labels):
-        if sub_labels[idx] not in hierarchy[super_label]:
-            mismatch += 1
-    return mismatch
-
-
-def train_and_predict(model, epochs, train, test):
+def train_and_predict(model, epochs, train, test, batch_size=512):
     (x_train, y_super_train, y_sub_train), (x_test, y_super_test, y_sub_test) = train, test
     model.fit(
         x_train,
         y={"super_output": y_super_train, "sub_output": y_sub_train},
         validation_data=(x_test, {"super_output": y_super_test, "sub_output": y_sub_test}),
-        batch_size=512,
+        batch_size=batch_size,
         epochs=epochs,
         validation_split=0.2,
         use_multiprocessing=True,
