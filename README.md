@@ -1,1 +1,3 @@
-# hierarchical_classification
+# Hierarchical Image Classification
+
+Author: Edwin S Yan
