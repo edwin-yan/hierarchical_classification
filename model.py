@@ -57,3 +57,39 @@ def vgg11(img_input, conv_dropout=0.2, activation='relu', class_type='default', 
     x = Flatten(name=f'{class_type}_flatten')(x)
 
     return x
+
+
+def vgg13(img_input, conv_dropout=0.2, activation='relu', class_type='default', nodes=64):
+    # Block 1
+    block = 1
+    x = conv_block(nodes, dropout=conv_dropout, activation=activation, block=block, layer=1, class_type=class_type)(img_input)
+    x = conv_block(nodes, dropout=conv_dropout, activation=activation, block=block, layer=2, class_type=class_type, enable_dropout=False)(x)
+    x = MaxPooling2D((2, 2), strides=(2, 2), name=f'{class_type}_block{block}_pool')(x)
+
+    # Block 2
+    block += 1
+    x = conv_block(nodes * 2, dropout=conv_dropout, activation=activation, block=block, layer=1, class_type=class_type)(x)
+    x = conv_block(nodes * 2, dropout=conv_dropout, activation=activation, block=block, layer=2, class_type=class_type, enable_dropout=False)(x)
+    x = MaxPooling2D((2, 2), strides=(2, 2), name=f'{class_type}_block{block}_pool')(x)
+
+    # Block 3
+    block += 1
+    x = conv_block(nodes * 4, dropout=conv_dropout, activation=activation, block=block, layer=1, class_type=class_type)(x)
+    x = conv_block(nodes * 4, dropout=conv_dropout, activation=activation, block=block, layer=2, class_type=class_type, enable_dropout=False)(x)
+    x = MaxPooling2D((2, 2), strides=(2, 2), name=f'{class_type}_block{block}_pool')(x)
+
+    # Block 4
+    block += 1
+    x = conv_block(nodes * 8, dropout=conv_dropout, activation=activation, block=block, layer=1, class_type=class_type)(x)
+    x = conv_block(nodes * 8, dropout=conv_dropout, activation=activation, block=block, layer=2, class_type=class_type, enable_dropout=False)(x)
+    x = MaxPooling2D((2, 2), strides=(2, 2), name=f'{class_type}_block{block}_pool')(x)
+
+    # Block 5
+    block += 1
+    x = conv_block(nodes * 8, dropout=conv_dropout, activation=activation, block=block, layer=1, class_type=class_type)(x)
+    x = conv_block(nodes * 8, dropout=conv_dropout, activation=activation, block=block, layer=2, class_type=class_type, enable_dropout=False)(x)
+    x = MaxPooling2D((2, 2), strides=(2, 2), name=f'{class_type}_block{block}_pool')(x)
+
+    x = Flatten(name=f'{class_type}_flatten')(x)
+
+    return x
