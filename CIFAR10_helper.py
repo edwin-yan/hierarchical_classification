@@ -4,12 +4,22 @@ import matplotlib.pyplot as plt
 from common import *
 
 
+def create_superclass(x):
+    return 0 if x in [0, 1, 8, 9] else 1
+
+
+v_create_superclass = np.vectorize(create_superclass)
+
+
+def get_cifar10_with_split():
+    (x_train, y_sub_train), (x_test, y_sub_test) = keras.datasets.cifar10.load_data()
+    x_train, x_test = x_train / 255, x_test / 255
+    y_super_train, y_super_test = to_categorical(v_create_superclass(y_sub_train)), to_categorical(v_create_superclass(y_sub_test))
+    y_sub_train, y_sub_test = to_categorical(y_sub_train), to_categorical(y_sub_test)
+
+    return (x_train, y_super_train, y_sub_train), (x_test, y_super_test, y_sub_test)
+
 def get_cifar10():
-    def create_superclass(x):
-        return 0 if x in [0, 1, 8, 9] else 1
-
-    v_create_superclass = np.vectorize(create_superclass)
-
     (x_train, y_train), (x_test, y_test) = keras.datasets.cifar10.load_data()
     X, Y_sub = np.concatenate((x_train, x_test), axis=0) / 255, np.concatenate((y_train, y_test), axis=0)
     Y_super = v_create_superclass(Y_sub)
@@ -45,7 +55,6 @@ def plot_sample_images(inputs, v_label_func, top_n=20, n_col=10):
     plt.show()
 
 
-
 def train_and_predict(model, epochs, train, test, batch_size=512):
     (x_train, y_super_train, y_sub_train), (x_test, y_super_test, y_sub_test) = train, test
     model.fit(
@@ -69,6 +78,36 @@ def train_and_predict(model, epochs, train, test, batch_size=512):
 
     hierarchy = gen_hierarchy(y_super_train, y_sub_train)
     n_mismatch = calculate_hiearchy_mismatch(np.argmax(yhat_super_test, axis=1), np.argmax(yhat_sub_test, axis=1), hierarchy)
+    print(f"{n_mismatch} vs {n_rows}")
+    mismatch_rate = n_mismatch / n_rows
+    print(f"Super Class Error Rate: {error_rate_super}\nSub Class Error Rate: {error_rate_sub}\nMismatch Rate: {mismatch_rate}")
+    return error_rate_super, error_rate_sub, mismatch_rate
+
+
+def train_and_predict_bottom_up(model, epochs, train, test, batch_size=512):
+    (x_train, y_super_train, y_sub_train), (x_test, y_super_test, y_sub_test) = train, test
+    model.fit(
+        x_train,
+        y=y_sub_train,
+        validation_data=(x_test, y_sub_test),
+        batch_size=batch_size,
+        epochs=epochs,
+        validation_split=0.2,
+        use_multiprocessing=True,
+    )
+
+    yhat_sub_test = np.argmax(model.predict(x_test, use_multiprocessing=True), axis=1)
+    yhat_super_test = v_create_superclass(yhat_sub_test)
+    y_super, yhat_super = v_get_labels(np.argmax(y_super_test, axis=1), 'super'), v_get_labels(yhat_super_test, 'super')
+    y_sub, yhat_sub = v_get_labels(np.argmax(y_sub_test, axis=1), 'sub'), v_get_labels(yhat_sub_test, 'sub')
+
+    # Calculate Metrics
+    n_rows = len(x_test)
+    error_rate_super = sum(y_super != yhat_super) / n_rows
+    error_rate_sub = sum(y_sub != yhat_sub) / n_rows
+
+    hierarchy = gen_hierarchy(y_super_train, y_sub_train)
+    n_mismatch = calculate_hiearchy_mismatch(yhat_super_test, yhat_sub_test, hierarchy)
     mismatch_rate = n_mismatch / n_rows
     print(f"Super Class Error Rate: {error_rate_super}\nSub Class Error Rate: {error_rate_sub}\nMismatch Rate: {mismatch_rate}")
     return error_rate_super, error_rate_sub, mismatch_rate
