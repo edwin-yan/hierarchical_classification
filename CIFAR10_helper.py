@@ -38,14 +38,14 @@ def get_labels(idx, level='super'):
 v_get_labels = np.vectorize(get_labels)
 
 
-def plot_sample_images(inputs, v_label_func, top_n=20, n_col=10):
+def plot_sample_images(inputs, v_label_func, top_n=14, n_col=7):
     (images, super_labels_idx, sub_labels_idx) = inputs
     assert len(images) == len(super_labels_idx) == len(sub_labels_idx)
     super_labels, sub_labels = v_label_func(np.argmax(super_labels_idx, axis=1), 'super'), v_label_func(np.argmax(sub_labels_idx, axis=1), 'sub')
     top_n = top_n if top_n < len(images) else len(images)
     n_row = int(top_n / n_col)
     images = images[:top_n]
-    figsize = (2.5 * n_col, 2.5 * n_row)
+    figsize = (4 * n_col, 3.5 * n_row)
     fig, axes = plt.subplots(n_row, n_col, figsize=figsize)
     for idx, image in enumerate(images):
         ax = axes[idx // n_col, idx % n_col]
