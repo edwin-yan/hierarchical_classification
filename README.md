@@ -6,7 +6,7 @@ _Individual Research Project - EN.605.746 - Advanced Machine Learning, Johns Hop
 
 
 ## Environment
-There are two ways to reproduce our environment in Linux (Tested on Ubuntu and Red Hat Enterprise):
+There are two ways to reproduce my environment in Windows:
 1. **conda_env.yml** - Conda Environment Export
 2. **requirements.txt** - Pip Packages Export
 
